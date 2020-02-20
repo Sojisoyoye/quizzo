@@ -1,28 +1,51 @@
 # coding=utf-8
 
-from .entities.entity import Session, engine, Base
-from .entities.quiz import Quiz
 
-# generate database schema
+from flask import Flask, jsonify, request
+
+
+from .entities.entity import Session, engine, Base
+from .entities.quiz import Quiz, QuizSchema
+
+app = Flask(__name__)
+
+# if needed, generate database schema
 Base.metadata.create_all(engine)
 
-# start session
-session = Session()
 
-# check for existing data
-quizzes= session.query(Quiz).all()
+@app.route('/quizzes')
+def get_quizzes():
+    # fetching from the database
+    session = Session()
+    quiz_objects = session.query(Quiz).all()
 
-if len(quizzes) == 0:
-    # create and persist dummy exam
-    python_quiz = Quiz("SQLAlchemy Quiz", "Test your knowledge about SQLAlchemy.", "script")
-    session.add(python_quiz)
-    session.commit()
+    # transforming into JSON-serializable objects
+    schema = QuizSchema(many=True)
+    quizzes = schema.dump(quiz_objects)
+
+    print(f'"WWWWW:" {quizzes}')
+
+    # serializing as JSON
     session.close()
+    return jsonify(quizzes)
 
-    # reload exams
-    quizzes = session.query(Quiz).all()
 
-# show existing exams
-print('### Quizzes:')
-for quiz in quizzes:
-    print(f'({quiz.id}) {quiz.title} - {quiz.description}')
+
+@app.route('/quizzes', methods=['POST'])
+def add_quiz():
+    # mount quiz object
+    posted_quiz = QuizSchema(only=('title', 'description'))\
+        .load(request.get_json())
+
+    quiz = Quiz(**posted_quiz.data, created_by="HTTP post request")
+
+    # persist quiz
+    session = Session()
+    session.add(quiz)
+    session.commit()
+
+    # return created quiz
+    new_quiz = QuizSchema().dump(quiz).data
+    session.close()
+    return jsonify(new_quiz), 201
+    

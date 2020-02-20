@@ -1,7 +1,10 @@
 # coding=utf-8
 
-from sqlalchemy import Column, String
+# marshmallow to handle serialization and deserialization of JSON objects
+from marshmallow import Schema, fields
 
+
+from sqlalchemy import Column, String
 from .entity import Entity, Base
 
 
@@ -15,3 +18,12 @@ class Quiz(Entity, Base):
         Entity.__init__(self, created_by)
         self.title = title
         self.description = description
+
+
+class QuizSchema(Schema):
+    id = fields.Number()
+    title = fields.Str()
+    description = fields.Str()
+    created_at = fields.DateTime()
+    updated_at = fields.DateTime()
+    last_updated_by = fields.Str()
