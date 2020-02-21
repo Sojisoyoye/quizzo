@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker
 
 db_url = 'localhost:5432'
 db_name = 'quizzo'
-db_user = 'olasunkanmi'
-db_password = ''
+db_user = 'postgres'
+db_password = 'Olus'
 engine = create_engine(f'postgresql://{db_user}:{db_password}@{db_url}/{db_name}')
 Session = sessionmaker(bind=engine)
 
