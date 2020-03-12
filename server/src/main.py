@@ -5,7 +5,7 @@ from flask_cors import CORS
 
 from entities.entity import Session, engine, Base
 from entities.quiz import Quiz, QuizSchema
-
+from auth import AuthError, requires_auth
 
 app = Flask(__name__)
 CORS(app)
@@ -31,6 +31,7 @@ def get_quiz():
 
 
 @app.route('/quiz', methods=['POST'])
+@requires_auth
 def add_exam():
     # mount exam object
     posted_quiz = QuizSchema(only=('title', 'description'))\
@@ -47,6 +48,13 @@ def add_exam():
     new_quiz = QuizSchema().dump(quiz)
     session.close()
     return jsonify(new_quiz), 201
+
+
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
 
 
 if __name__ == '__main__':
